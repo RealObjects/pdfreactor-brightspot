@@ -1,9 +1,9 @@
 <img src="plugin/src/main/resources/com/realobjects/brightspot/pdfreactor/web/pdfreactor-logo.svg" alt="PDFreactor" width="96" align="right">
 
-# PDFreactor for Brightspot
+# PDFreactor Integration for Brightspot (Beta)
 
 Print-grade PDF generation for [Brightspot CMS](https://www.brightspot.com/),
-powered by [RealObjects PDFreactor](https://www.pdfreactor.com/). Editors
+powered by integrating [RealObjects PDFreactor](https://www.pdfreactor.com/). Editors
 preview their content as a paged PDF right in the CMS, generate and download
 PDFs on demand, and get them regenerated automatically on publish — with the
 typographic fidelity, CSS Paged Media support, and PDF/A / PDF/UA / PDF/X
@@ -81,16 +81,13 @@ conventions are described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [MIT](LICENSE) — Copyright (c) RealObjects GmbH.
 
-**Logo & trademark notice:** the PDFreactor logo
+**Trademark notice:** PDFreactor and the PDFreactor logo
 (`plugin/src/main/resources/com/realobjects/brightspot/pdfreactor/web/pdfreactor-logo.svg`)
-is RealObjects' own artwork — Copyright (c) RealObjects GmbH, all rights
-reserved. It is **not** covered by the MIT grant and may not be used
-outside this plugin without RealObjects' permission. PDFreactor® is a
+are **not** covered by the MIT grant. PDFreactor® is a
 product of RealObjects GmbH.
 
 ## PDFreactor licenses & support
 
-PDFreactor itself is a commercial product; licenses and trials are
+PDFreactor itself is a separate commercial product; licenses and trials are
 available from [RealObjects](https://www.pdfreactor.com/buy/), and
 product support via [pdfreactor.com/support](https://www.pdfreactor.com/support/).
-For questions about this plugin, use this repository's issue tracker.

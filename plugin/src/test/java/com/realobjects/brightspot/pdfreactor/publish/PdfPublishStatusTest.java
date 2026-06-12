@@ -16,11 +16,13 @@ class PdfPublishStatusTest {
     }
 
     @Test
-    void publishFailsClosedOnLicenseAndMissingResources() {
-        // A stored publish artifact must never carry eval watermarks or
-        // broken resources, so both policies fail closed.
-        assertThat(PdfPublishAutomation.publishOptions().isFailOnLicenseProblems()).isTrue();
+    void publishFailsClosedOnMissingResourcesButNotLicense() {
+        // A stored publish artifact must never carry broken resources, so the
+        // missing-resource policy fails closed. License problems are relaxed so
+        // an unlicensed service archives watermarked output rather than blocking
+        // the publish.
         assertThat(PdfPublishAutomation.publishOptions().isFailOnMissingResources()).isTrue();
+        assertThat(PdfPublishAutomation.publishOptions().isFailOnLicenseProblems()).isFalse();
     }
 
     @Test

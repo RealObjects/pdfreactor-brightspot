@@ -18,9 +18,9 @@ public enum PdfLicenseState {
 
     /**
      * A probe conversion with the {@code LICENSE} policy aborted with a
-     * license error — the service runs unlicensed (evaluation mode), so
-     * output is watermarked and conversions that fail closed on license
-     * problems (Generate, publish) fail.
+     * license error — the service runs unlicensed (evaluation mode), so all
+     * output is watermarked. Conversions are not blocked: preview, Generate,
+     * and publish all relax the license policy and produce watermarked PDFs.
      */
     EVALUATION,
 

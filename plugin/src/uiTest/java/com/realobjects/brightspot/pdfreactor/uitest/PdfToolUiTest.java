@@ -19,7 +19,6 @@ import com.microsoft.playwright.options.BoundingBox;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -61,9 +60,10 @@ class PdfToolUiTest {
     /**
      * Whether the PDFreactor service behind the stack is licensed; detected
      * once in {@link #bootstrapAndLogIn()}. Unlicensed, the service runs in
-     * evaluation mode: previews answer with the watermarked carrier page and
-     * the storing paths (Generate / publish) fail closed — several tests
-     * branch or skip on this.
+     * evaluation mode: previews answer with the watermarked carrier page (and
+     * the informational evaluation banner), while the storing paths (Generate /
+     * publish) still produce — and store — watermarked PDFs. A few preview
+     * tests branch on this to assert the carrier page vs. a raw PDF.
      */
     private static boolean licensed;
 
@@ -572,10 +572,9 @@ class PdfToolUiTest {
     @Test
     @Order(6)
     void generateStoresAndServesCachedPdf() {
-        Assumptions.assumeTrue(licensed,
-                "needs a licensed service: Generate fails closed on license problems"
-                        + " before anything is stored (fail-closed behavior is covered"
-                        + " by DefaultPdfReactorServiceTest and the e2e suite)");
+        // Runs in both licensed and evaluation mode: Generate no longer fails
+        // closed on license problems, so an unlicensed service stores and
+        // serves a watermarked PDF (still application/pdf).
         openEditPageAwaitingPreview(PAGED_WEB);
         String href = generateHref();
 
@@ -684,41 +683,24 @@ class PdfToolUiTest {
 
         page.click("button[name=action-publish]");
 
-        if (licensed) {
-            // The publish hook converts off-thread; poll the widget until the
-            // stored PDF's identity appears or changes.
-            long deadline = System.currentTimeMillis() + 60_000L;
-            String after = before;
-            while (System.currentTimeMillis() < deadline) {
-                page.waitForTimeout(2_000);
-                page.navigate(editUrl(LONG_FORM));
-                after = storedPdfIdentityOrNull();
-                if (after != null && !after.equals(before)) {
-                    break;
-                }
+        // The publish hook converts off-thread; poll the widget until the
+        // stored PDF's identity appears or changes. Publish no longer fails
+        // closed on license, so this holds in evaluation mode too — the stored
+        // PDF is simply watermarked.
+        long deadline = System.currentTimeMillis() + 90_000L;
+        String after = before;
+        while (System.currentTimeMillis() < deadline) {
+            page.waitForTimeout(2_000);
+            page.navigate(editUrl(LONG_FORM));
+            after = storedPdfIdentityOrNull();
+            if (after != null && !after.equals(before)) {
+                break;
             }
-
-            assertThat(after).as("publish must produce/refresh the stored PDF")
-                    .isNotNull()
-                    .isNotEqualTo(before);
-        } else {
-            // Evaluation mode: the publish-time conversion fails closed on
-            // the license, nothing may be stored, and the failure must
-            // surface on the widget as the red publish-failure banner.
-            long deadline = System.currentTimeMillis() + 90_000L;
-            Locator failureBanner = page.locator(".PdfWidget-publishFailure");
-            while (System.currentTimeMillis() < deadline && failureBanner.count() == 0) {
-                page.waitForTimeout(2_000);
-                page.navigate(editUrl(LONG_FORM));
-                failureBanner = page.locator(".PdfWidget-publishFailure");
-            }
-            assertThat(failureBanner.count())
-                    .as("an unlicensed publish must surface the failure banner")
-                    .isPositive();
-            assertThat(storedPdfIdentityOrNull())
-                    .as("an unlicensed publish must not store a PDF")
-                    .isEqualTo(before);
         }
+
+        assertThat(after).as("publish must produce/refresh the stored PDF")
+                .isNotNull()
+                .isNotEqualTo(before);
     }
 
     private String storedPdfIdentityOrNull() {
@@ -729,12 +711,9 @@ class PdfToolUiTest {
     @Test
     @Order(14)
     void convertAgainIsAFrameSafePostNotANavigableLink() {
-        Assumptions.assumeTrue(licensed,
-                "needs a licensed service: the Convert again control only renders"
-                        + " next to a stored PDF, which the licensed Generate path"
-                        + " (Order 6) produces");
-        // PAGED_WEB has a stored PDF from Order 6, so the widget shows the
-        // "Convert again" (regenerate) control.
+        // PAGED_WEB has a stored PDF from Order 6 (in both licensed and
+        // evaluation mode, since Generate no longer fails closed on license),
+        // so the widget shows the "Convert again" (regenerate) control.
         page = context.newPage();
         page.navigate(editUrl(PAGED_WEB));
         page.waitForLoadState();

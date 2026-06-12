@@ -229,8 +229,10 @@ The plugin's own surfaces set the error policies per path: previews are
 **lenient** (missing resources are reported as diagnostics, the editor
 still sees a PDF), while publish and on-demand generation **fail
 closed** (`failOnMissingResources(true)`) so no broken PDF is ever
-stored or published. License problems always fail closed. Follow the
-same pattern in your own calls.
+stored or published. License problems do *not* block any path
+(`failOnLicenseProblems(false)` on every surface): an unlicensed service
+produces watermarked output everywhere, surfaced by the health widget
+and the preview banner. Follow the same pattern in your own calls.
 
 ## Storage & caching
 

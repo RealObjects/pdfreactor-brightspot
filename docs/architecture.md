@@ -28,10 +28,12 @@ and the [configuration reference](configuration.md).
    front-end internals had to be coupled (the preview chrome), every
    coupling point is documented in source as an upgrade checklist (the
    `SKIN COUPLING INVENTORY` on `PdfPreviewType`).
-5. **Fail closed where output persists, lenient where editors
-   iterate.** Stored or published PDFs must never contain broken
-   resources or unlicensed watermarks; the editor preview, by contrast,
-   always renders and surfaces problems as diagnostics.
+5. **Fail closed on broken resources where output persists, lenient
+   where editors iterate.** Stored or published PDFs must never contain
+   broken resources; the editor preview, by contrast, always renders and
+   surfaces problems as diagnostics. Unlicensed watermarks do not block
+   any path — an evaluation-mode service produces watermarked output
+   everywhere, surfaced by the health widget and preview banner.
 
 ## Architecture layers
 
@@ -107,9 +109,10 @@ conversion request.
   use), Download, and a CSRF-protected POST **Convert again**, plus the
   stored-PDF status line (date, page count, size) and the
   publish-failure banner.
-- **`PdfGeneratePage`** converts fail-closed, stores bytes as a
-  `StorageItem`, records a **`GeneratedPdf`** cache entry, and streams
-  the result. Access is authorization-checked per content (site scope
+- **`PdfGeneratePage`** converts fail-closed on broken resources (but
+  not on license — an unlicensed service stores watermarked output),
+  stores bytes as a `StorageItem`, records a **`GeneratedPdf`** cache
+  entry, and streams the result. Access is authorization-checked per content (site scope
   and type permission), and downloads go by record id — storage URLs
   are never exposed.
 
@@ -121,8 +124,10 @@ per-document "Generate PDF on publish" checkbox, on by default) — all
 evaluated in a `Modification`'s `afterSave`, which filters to visible
 (published) revisions via `State#isVisible`. Qualifying publishes
 enqueue a host-pinned `Task` (one node in a cluster) that renders,
-converts fail-closed, stores, stamps the content's status fields, and
-on failure publishes a `PdfPublishFailureTopic` notification. The task
+converts fail-closed on broken resources (but not on license — an
+unlicensed service archives watermarked output), stores, stamps the
+content's status fields, and on failure publishes a
+`PdfPublishFailureTopic` notification. The task
 is bounded by a small shared executor (`pdfreactor/publishConcurrency`)
 so bulk republishes cannot stampede the service; a supersede guard
 drops a conversion when a newer revision already owns generation; and

@@ -274,7 +274,9 @@ For code that calls `PdfReactorService` directly. Built with
   `colorConversionIntent`
 - Error policies: `failOnMissingResources` (preview leaves this off and
   surfaces diagnostics; publish/generate set it), `failOnLicenseProblems`
-  (on by default)
+  (on by default for programmatic callers, but preview, publish, and
+  generate all relax it so an unlicensed service produces watermarked
+  output rather than failing)
 - Execution: `async`, `conversionTimeoutSeconds`
 - Troubleshooting: `debug`, `inspectable`
 - Escape hatch: `configurationJson` (deep-merged as the per-call layer)

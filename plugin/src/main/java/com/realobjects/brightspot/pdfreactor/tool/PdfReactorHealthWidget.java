@@ -234,7 +234,7 @@ public class PdfReactorHealthWidget extends DashboardWidget {
                 line += " " + localize("status.licensed", "(licensed)");
             } else if (license == PdfLicenseState.EVALUATION) {
                 line += " " + localize("status.evaluation",
-                        "(evaluation — conversions fail closed on license; preview is watermarked)");
+                        "(evaluation — output is watermarked)");
             }
             return P.with(line);
         }

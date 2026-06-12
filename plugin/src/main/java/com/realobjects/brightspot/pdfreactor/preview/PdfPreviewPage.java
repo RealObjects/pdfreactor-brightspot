@@ -169,15 +169,14 @@ public class PdfPreviewPage extends ToolPage {
         // Clean success. The preview relaxes failOnLicenseProblems so the
         // editor always sees output, which means an evaluation watermark
         // carries no diagnostics problem and would display silently. Post an
-        // informational banner explaining the watermark (and the otherwise
-        // confusing "preview shows a PDF but Generate fails" asymmetry). The
-        // license state comes from the background-cached global probe — never
-        // probed inline here; a per-site refinement is deferred (Part G.1).
+        // informational banner explaining the watermark. The license state
+        // comes from the background-cached global probe — never probed inline
+        // here; a per-site refinement is deferred.
         if (PdfLicenseProbe.current() == PdfLicenseState.EVALUATION) {
             writeProblemDocument("info",
                     localize("eval.headline",
                             "Evaluation mode — this PDF is watermarked. Generated and published PDFs"
-                                    + " fail closed until a valid PDFreactor license is configured."),
+                                    + " are watermarked too until a valid PDFreactor license is configured."),
                     null, result.getDocument());
             return;
         }
