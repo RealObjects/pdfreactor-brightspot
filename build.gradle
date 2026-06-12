@@ -1,0 +1,10 @@
+allprojects {
+    repositories {
+        // PDFreactor Web Service Java client, now published to Maven Central
+        // (com.pdfreactor.webservice:pdfreactor-java-client); needed by every
+        // project that resolves :plugin transitively. This replaces the former
+        // RealObjects internal Archiva repository (local-network only), so the
+        // build no longer requires being on that network.
+        mavenCentral()
+    }
+}

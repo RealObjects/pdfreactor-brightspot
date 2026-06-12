@@ -1,0 +1,21 @@
+# Mounts a PDFreactor license into the dev-harness PDFreactor service.
+#
+# Without this override the service runs in evaluation mode (watermarked
+# output) — fine for trying the plugin out. To run licensed:
+#
+#   1. Put your PDFreactor license key file at the repo root as
+#      licensekey.xml (gitignored — never commit license keys).
+#   2. Copy this file to docker-compose.override.yml (also gitignored;
+#      Docker Compose merges it into docker-compose.yml automatically).
+#   3. docker compose up -d pdfreactor
+#
+# GOTCHA: if ./licensekey.xml does not exist when the container starts,
+# Docker creates an empty *directory* of that name to satisfy the bind
+# mount — which then shadows a real key file you add later. If the service
+# unexpectedly runs in evaluation mode, check that licensekey.xml is a
+# FILE: `test -f licensekey.xml || rm -rf licensekey.xml`, recreate it,
+# then `docker compose up -d --force-recreate pdfreactor`.
+services:
+  pdfreactor:
+    volumes:
+      - ./licensekey.xml:/ro/config/licensekey.txt:ro

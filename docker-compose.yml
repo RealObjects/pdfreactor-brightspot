@@ -1,0 +1,77 @@
+services:
+  mysql:
+    image: brightspot/mysql:mysql5.6
+    volumes:
+      - mysql-data:/var/lib/mysql
+    # Let MySQL finish a clean InnoDB shutdown on stop. The image entrypoint
+    # execs mysqld as PID 1, so a stop sends SIGTERM straight to it — but a
+    # clean flush takes ~9s, and Docker's default 10s grace was killing it
+    # early (exit 137, "Shutdown complete" never logged). An unclean stop
+    # leaves InnoDB needing crash recovery, which makes the next boot slow to
+    # open its socket and trips the entrypoint's tzinfo race (ERROR 2002 ->
+    # set -eo pipefail aborts the container). A generous grace lets the
+    # Docker Desktop stop button shut MySQL down cleanly, so the next start is
+    # fast and race-free. See MANUAL-VERIFICATION.md / the architecture doc.
+    stop_grace_period: 90s
+
+  solr:
+    image: brightspot/solr:8
+    environment:
+      -  SOLR_CONFIG=dari-solr-11
+    # Loopback-only: Solr's admin/query API is unauthenticated; do not expose
+    # it on the LAN. (80/443 on apache stay open for browser/LAN testing.)
+    ports:
+      - 127.0.0.1:8081:8080
+    volumes:
+      - solr-data:/var/solr/data/collection1/data
+    # Give Solr time to flush/close its index cleanly on stop.
+    stop_grace_period: 30s
+
+  tomcat:
+    image: brightspot/tomcat:9-jdk11
+    restart: unless-stopped
+    # Loopback-only: 5005 is the JDWP debug port (remote code execution to
+    # anyone who can reach it). Keep it off the LAN.
+    ports:
+      - 127.0.0.1:5005:5005
+    volumes:
+      - storage:/servers/tomcat/storage
+      - .:${PROJECT_DIRECTORY}:cached
+    environment:
+      - BRIGHTSPOT_PROJECT_DIRECTORY=/code
+      - CONTEXT_PROPERTIES=${PROJECT_DIRECTORY}/docker-context.properties
+      - MYSQL_DATABASE=brightspot
+      - ROOT_WAR=${PROJECT_DIRECTORY}/web/build/libs/web.war
+      - SOLR_URL=http://solr:8080/solr/collection1
+    depends_on:
+      - apache
+      - mysql
+      - solr
+
+  apache:
+    image: brightspot/apache:2-dims3
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - storage:/var/www/localhost/htdocs/storage
+
+  # PDFreactor Web Service (matches the client jar version 12.6.0).
+  # Runs in evaluation mode (watermarked output) by default — no license file
+  # is required to start the stack. To use a license, copy
+  # docker-compose.override.yml.example to docker-compose.override.yml (compose
+  # merges it automatically) and put your license key next to it; see the
+  # example file for details.
+  pdfreactor:
+    image: realobjects/pdfreactor:12.6.0
+    # Loopback-only: this is an unauthenticated conversion service that fetches
+    # arbitrary URLs (an SSRF surface) — do not expose it on the LAN.
+    ports:
+      - 127.0.0.1:9423:9423
+    environment:
+      - JAVA_OPTIONS=-Xmx2g
+
+volumes:
+  mysql-data:
+  solr-data:
+  storage:

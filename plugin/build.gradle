@@ -1,0 +1,122 @@
+plugins {
+    id 'com.brightspot.java-core'
+    id 'maven-publish'
+}
+
+description = 'PDFreactor integration plugin for Brightspot CMS'
+
+// Lets consumers install the plugin into their local Maven repository
+// (`./gradlew :plugin:publishToMavenLocal`) and depend on
+// com.realobjects.brightspot:pdfreactor-brightspot from mavenLocal().
+// The artifactId is set explicitly: the module path (:plugin) would
+// otherwise publish as the meaningless artifact name "plugin".
+//
+// The Brightspot build conventions manage dependency versions through
+// ENFORCED platforms (brightspot-bom / brightspot-dependencies), which
+// Gradle refuses to publish in module metadata because forced versions
+// would leak to consumers. So: no Gradle module metadata, and the POM
+// instead carries the concrete resolved version of every dependency
+// (version mapping) — self-contained coordinates that work without the
+// consumer importing any BOM.
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifactId = 'pdfreactor-brightspot'
+            versionMapping {
+                usage('java-api') { fromResolutionResult() }
+                usage('java-runtime') { fromResolutionResult() }
+            }
+        }
+    }
+}
+
+tasks.withType(GenerateModuleMetadata).configureEach {
+    enabled = false
+}
+
+dependencies {
+    api 'com.pdfreactor.webservice:pdfreactor-java-client:12.6.0'
+
+    api 'com.psddev:cms-db'
+    api 'com.psddev:cms-tool-ui'
+    api 'com.psddev:dari-db'
+
+    // Raw-configuration pass-through (Phase 6.3): parse/deep-merge/apply the
+    // client's Configuration JSON. Version pinned by the Brightspot BOM
+    // (already on the classpath transitively; declared for the direct use).
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Versions pinned by the Brightspot BOM.
+    testImplementation 'com.psddev:test-db'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+// End-to-end tests against a real PDFreactor container (Testcontainers).
+// Kept out of `check`: they need a reachable Docker daemon. Run with
+// `./gradlew :plugin:e2eTest`. If `licensekey.xml` exists in the repo root
+// it is mounted into the container; otherwise the service runs in
+// evaluation mode (watermarked output) and license-sensitive tests skip.
+sourceSets {
+    e2eTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    e2eTestImplementation.extendsFrom testImplementation
+    e2eTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    e2eTestImplementation 'org.testcontainers:testcontainers'
+    e2eTestImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    e2eTestImplementation 'org.awaitility:awaitility'
+}
+
+tasks.register('e2eTest', Test) {
+    description = 'Runs end-to-end tests against a real PDFreactor container.'
+    group = 'verification'
+    testClassesDirs = sourceSets.e2eTest.output.classesDirs
+    classpath = sourceSets.e2eTest.runtimeClasspath
+    systemProperty 'pdfreactor.licensekey.path',
+            rootProject.file('licensekey.xml').absolutePath
+}
+
+// Browser-driven UI tests (Playwright) against the running local CMS stack
+// (Phase 4b). Preconditions: `docker compose up -d` with the current
+// web.war deployed; the dev harness bootstraps its own test user, preview
+// type, and sample data via /cms/_seed-ui-test. Run with
+// `./gradlew :plugin:uiTest` (kept out of `check`). Black-box: the suite
+// has no dependency on the plugin's own classes.
+sourceSets {
+    uiTest
+}
+
+configurations {
+    uiTestImplementation.extendsFrom testImplementation
+    uiTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencies {
+    uiTestImplementation 'com.microsoft.playwright:playwright:1.60.0'
+    uiTestImplementation 'com.fasterxml.jackson.core:jackson-databind'
+}
+
+tasks.register('uiTest', Test) {
+    description = 'Runs Playwright UI tests against the running local CMS stack.'
+    group = 'verification'
+    testClassesDirs = sourceSets.uiTest.output.classesDirs
+    classpath = sourceSets.uiTest.runtimeClasspath
+    systemProperty 'uiTest.baseUrl',
+            providers.gradleProperty('uiTestBaseUrl').getOrElse('http://localhost')
+}

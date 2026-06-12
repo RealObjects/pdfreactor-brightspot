@@ -1,0 +1,18 @@
+plugins {
+    id 'com.brightspot.java-core'
+}
+
+description = 'Development-harness Brightspot application core'
+
+dependencies {
+    api project(':plugin')
+
+    api 'com.psddev:cms-db'
+    api 'com.psddev:cms-hunspell'
+    api 'com.psddev:cms-tool-ui'
+    api 'com.psddev:cms-type'
+    api 'com.psddev:dari-db'
+    api 'com.psddev:dari-mysql'
+    api 'com.psddev:dari-solr'
+    api 'com.psddev:graphql-gca'
+}

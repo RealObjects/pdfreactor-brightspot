@@ -1,0 +1,206 @@
+/*
+ * Scoped styles for the PDF preview frame and its problem banner, emitted by
+ * PdfPreviewType.display into the PreviewFrame-typeDisplay (.PdfPreviewFrame).
+ *
+ * SKIN COUPLING: this stylesheet ports the v5 skin's icon-button recipe onto
+ * the plugin-owned PdfPreview-refresh class and depends on private skin
+ * internals (grid coordinate, typeActions allowlist, the --btu-theme- and
+ * --button- custom properties, the lucide \e149 glyph). The checklist is in the SKIN
+ * COUPLING INVENTORY javadoc on PdfPreviewType; any brightspot/BOM bump must
+ * re-verify it. Rationale stays in the comments below.
+ */
+
+/*
+ * Pin the PDF iframe to the pane at scale 1. Without this the content-edit
+ * resize script scales preview iframes (a virtual width transformed down to
+ * the pane), which is right for web pages but shrinks the browser's PDF
+ * viewer -- including its controls -- to a fraction of their size. These
+ * !important rules beat the script's inline styles; the PDF viewer does its
+ * own fit-to-width, so no scaling is needed.
+ */
+.PdfPreviewFrame iframe:not(.Preview-overlayFrame) {
+    transform: none !important;
+    width: 100% !important;
+    top: var(--PdfPreview-bannerHeight, 0px) !important;
+    height: calc(100% - var(--PdfPreview-bannerHeight, 0px)) !important;
+}
+
+/*
+ * Problems banner (rendered into the Tool DOM by preview-problems.js): visual
+ * styling comes entirely from the skin's themed Message / is-warning /
+ * is-error / is-info classes; only structural bits are added here.
+ */
+.PdfPreview-problems {
+    position: relative;
+    z-index: 1;
+    padding: 0.75rem 1rem;
+    /*
+     * Always stack headline / details / remedy / technical vertically.
+     * The base .Message is display: flex with the default row direction (and
+     * flex-wrap), so at wide pane widths the banner's children flow onto one
+     * line. Force a column so they stack regardless of width; gap: 0 leaves
+     * the per-child margins (below) as the only vertical spacing.
+     */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+
+/*
+ * Themed info ("blue") variant for the evaluation banner. SKIN COUPLING:
+ * the v5 skin themes .Message.is-warning / .is-error / .is-success but has NO
+ * .Message.is-info rule (verified against brightspot-bom 5.0.2.4 -- "is-info"
+ * does not appear in the skin CSS), so an is-info banner falls back to the
+ * plain base .Message and looks unthemed. Port the skin's Message color recipe
+ * onto our own .PdfPreview-problems.is-info using the --btu-theme-primary-*
+ * (blue) scale, with literal blue (hue 250) fallbacks so a renamed token
+ * degrades to a light-blue info look rather than breaking. The base .Message
+ * still supplies border width/style, padding, and icon.
+ */
+.PdfPreview-problems.is-info {
+    border-color: oklch(var(--btu-theme-primary-200, 84.36% 0.077 250) / 1);
+    background-color: oklch(var(--btu-theme-primary-25, 97.89% 0.0099 250) / 1);
+    color: oklch(var(--btu-theme-primary-700, 50.18% 0.244 250) / 1);
+    --link-color: oklch(var(--btu-theme-primary-800, 44% 0.2 250) / 1);
+}
+
+.PdfPreview-problems ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.PdfPreview-problems p {
+    margin: 0.5rem 0 0;
+}
+
+.PdfPreview-problems details {
+    margin-top: 0.5rem;
+}
+
+.PdfPreview-problems summary {
+    cursor: pointer;
+}
+
+.PdfPreview-problems pre {
+    white-space: pre-wrap;
+    font-size: 0.75rem;
+    margin: 0.5rem 0 0;
+}
+
+/*
+ * The v5 edit pane makes .PreviewFrame a grid and dissolves every wrapper to
+ * display: contents, so the typeActions div is re-boxed here (one grid
+ * coordinate -- the header slot the skin assigns to the share link) and lays
+ * out its own children as a flex row; inside it, the skin's grid/allowlist
+ * rules no longer apply to the share link or our button.
+ */
+.PdfPreview-actions {
+    display: inline-flex !important;
+    grid-area: controls;
+    grid-column: 8;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/*
+ * Re-show the schedule-date control. createScheduleDateSelect renders as a
+ * .DateTimeInput (which the skin's typeActions allowlist shows), but we wrap
+ * it in a SPAN.PdfPreview-scheduleDate to carry the explanatory tooltip; that
+ * wrapper SPAN is a direct .PreviewFrame-typeActions child and is NOT
+ * allowlisted, so the skin's `display: none` on non-allowlisted children hides
+ * the span and everything inside it. Re-show it with !important exactly as the
+ * refresh button is re-shown (SKIN COUPLING: typeActions allowlist).
+ */
+.PdfPreview-actions .PdfPreview-scheduleDate {
+    display: inline-flex !important;
+    align-items: center;
+}
+
+/*
+ * Uniform control spacing. The refresh button is fully self-styled (a
+ * fixed 2.25rem box with no margins), but the skin-owned share link
+ * (.action-share) and the schedule-date control (.DateTimeInput) each carry
+ * their own intrinsic margins, so the visual gaps between the three controls
+ * differed even though the flex `gap` is uniform. Zero those margins so the
+ * 0.5rem flex gap is the ONLY horizontal spacing. (SKIN COUPLING:
+ * .action-share and .DateTimeInput are skin-owned — see the inventory on
+ * PdfPreviewType; !important matches the allowlist/box overrides above.)
+ */
+.PdfPreview-actions > .action-share,
+.PdfPreview-actions > .PdfPreview-scheduleDate,
+.PdfPreview-actions .DateTimeInput {
+    margin: 0 !important;
+}
+
+/*
+ * Verbatim port of the skin's .action-share icon-button recipe (token
+ * toggles, theme tokens, icon variant, box), flattened in cascade order;
+ * only additions: border reset (<button> vs <a>), display !important
+ * (allowlist), and the lucide refresh glyph \e149 the skin uses in
+ * .AssociatedContent-refresh. Focus-visible keeps the browser default outline
+ * instead of the skin's tw-ring (which needs Tailwind's box-shadow plumbing).
+ * CSS variables keep literal fallbacks so a renamed variable degrades to a
+ * neutral look instead of breaking.
+ */
+.PdfPreview-actions .PdfPreview-refresh {
+    display: inline-flex !important;
+    --button-pressed: initial;
+    --button-fill-none: ;
+    --button-color: oklch(var(--btu-theme-gray-100));
+    --button-text-color: oklch(var(--btu-theme-gray-700));
+    --button-fill-none-color: transparent;
+    --button-fill-none-text-color: oklch(var(--btu-theme-gray-700));
+    --button-outline-color: oklch(var(--btu-theme-gray-300));
+    --button-disabled-color-fill: oklch(var(--btu-theme-gray-100));
+    --button-disabled-color-fill-none: var(--button-fill-none) oklch(var(--btu-theme-white));
+    --button-disabled-text-color-fill-none: var(--button-fill-none) oklch(var(--btu-theme-gray-400));
+    --button-pressed-color: var(--button-pressed) var(--button-disabled-color, oklch(var(--btu-theme-primary-50)));
+    --button-pressed-text-color: var(--button-pressed) var(--button-disabled-text-color, oklch(var(--btu-theme-primary-800)));
+    --button-icon-font-size: 0px;
+    --button-icon-line-height: 1;
+    --button-font-size: var(--button-icon-font-size);
+    --button-line-height: var(--button-icon-line-height);
+    --button-padding-sm: 0.5rem;
+    --button-size-sm: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+    overflow: hidden;
+    width: var(--button-size-sm, auto);
+    height: var(--button-size-sm, auto);
+    padding: var(--button-padding-sm);
+    border: 0;
+    border-radius: var(--button-border-radius, 0.5rem);
+    outline: 1px solid var(--button-outline-color);
+    background: var(--button-pressed-color, var(--button-fill-none-color));
+    color: var(--button-pressed-text-color, var(--button-disabled-text-color, var(--button-fill-none-text-color)));
+    font-size: var(--button-font-size);
+    line-height: var(--button-line-height);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.PdfPreview-actions .PdfPreview-refresh:hover {
+    --button-color: oklch(var(--btu-theme-gray-200));
+    --button-fill-none-color: oklch(var(--btu-theme-gray-200));
+    --button-fill-none-text-color: oklch(var(--btu-theme-gray-900));
+}
+
+.PdfPreview-actions .PdfPreview-refresh::before {
+    font-family: lucide;
+    display: inline-flex;
+    font-feature-settings: 'liga' 0;
+    font-size: var(--Icon-size);
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: var(--Icon-size);
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    vertical-align: top;
+    content: '\e149';
+    --Icon-size: 1.25rem;
+}

@@ -1,0 +1,14 @@
+plugins {
+    id 'com.brightspot.war'
+}
+
+description = 'Development-harness Brightspot web application (WAR)'
+
+dependencies {
+    implementation project(':core')
+
+    // NOT dead despite the round-6 review's inferred claim: the com.brightspot.war
+    // plugin requires the cms-tool-ui artifact on the compile classpath (the war
+    // task fails with "compileClasspath ... contains no files" without it).
+    compileOnly 'com.psddev:cms-tool-ui'
+}

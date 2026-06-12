@@ -1,0 +1,161 @@
+/*
+ * Structural spacing for the on-demand generate widget (PdfWidget-*).
+ * Visual styling comes from the skin's own component classes; these rules
+ * only add layout/spacing. Contributed to every Tool page head by
+ * PdfReactorToolPageHead.
+ */
+.PdfWidget-stored {
+    margin-top: 0.75rem;
+}
+
+.PdfWidget-meta {
+    margin-bottom: 0.25rem;
+}
+
+/*
+ * The "publish first" gate note sits directly under the widget heading when no
+ * action is available; give it the same top breathing room as the stored/debug
+ * blocks so it is not flush against the header.
+ */
+.PdfWidget-note {
+    margin-top: 0.5rem;
+}
+
+.PdfWidget-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* "Convert again" is not an <a href> (it POSTs via pdf-widget.js),
+ * so give it the pointer affordance a link would have. */
+.PdfWidget-regenerate {
+    cursor: pointer;
+}
+
+/* Inline error surfaced by pdf-widget.js when a regenerate POST fails. */
+.PdfWidget-regenerateError {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: oklch(var(--btu-theme-red-600, 55% 0.2 25));
+}
+
+.PdfWidget-debug {
+    margin-top: 0.75rem;
+}
+
+/*
+ * On-demand Generate failure page (PdfGeneratePage.writeFailure). The skin
+ * bridges "message message-error" to .Message, which is display: flex with the
+ * default row direction, so the headline / details / remedy / the two
+ * disclosures ("Technical details", "Conversion log") flow onto one line.
+ * Force a column so they stack; gap: 0 leaves the per-child margins below as the
+ * only vertical spacing. Mirrors .PdfPreview-problems in preview-frame.css.
+ */
+.PdfGenerate-problems {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+}
+
+.PdfGenerate-problems ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.PdfGenerate-problems p {
+    margin: 0.5rem 0 0;
+}
+
+.PdfGenerate-problems details {
+    margin-top: 0.5rem;
+}
+
+.PdfGenerate-problems summary {
+    cursor: pointer;
+}
+
+/*
+ * A PDFreactor settings field's note (PdfReactorSiteSettings dynamic notes):
+ * ONE node carrying the explanation and, when the field is blank, a muted
+ * "Currently in effect (inherited): …" line below it. A single note node is
+ * the fix for the long-standing side-by-side problem: the Tool lays a field's
+ * note siblings out in a flex row that does NOT give each note the full row
+ * width (its `.CIG-row>:not(…,.CIG-note,…){width:100%}` rule excludes notes),
+ * so a separate static @Note and a separate dynamic note each took ~half the
+ * row and sat beside each other on wide viewports. With a single note there is
+ * no sibling to share the row with, and the explanation/inherited order is ours.
+ */
+.PdfFieldNote {
+    display: block;
+}
+
+/*
+ * Section heading that introduces a settings group inside the single
+ * "PDFreactor" cluster (Document Metadata, Features, Viewer Preferences, …),
+ * without splitting the cluster into separate collapsible panels. A field note
+ * renders below its field, so the heading is a trailing row on the note of the
+ * field that PRECEDES a group, landing just above that group's first field.
+ * Bold and a touch larger than note copy, with a top divider and breathing room
+ * so it reads as a section header. The note carrying a heading is forced full
+ * width so the divider spans the column rather than shrinking to the heading
+ * text; the skin gray token drives the divider color with a literal fallback so
+ * a renamed token degrades gracefully.
+ */
+.PdfFieldNote:has(.PdfFieldNote-heading) {
+    width: 100%;
+}
+
+.PdfFieldNote-heading {
+    margin: 0.75rem 0 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid oklch(var(--btu-theme-gray-300, 85% 0.01 250));
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+/* The inherited "currently in effect" line: smaller and more muted than the
+ * explanation above it. Muted color and type via the skin's gray token / note
+ * metrics, with literal fallbacks so a renamed token degrades gracefully. */
+.PdfFieldNote-inherited {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: oklch(var(--btu-theme-gray-600, 50% 0.02 250));
+}
+
+/*
+ * Health-widget DOWN/not-configured status. Rendered as the same plain <p> as
+ * the UP line (PdfReactorHealthWidget.down), so both statuses share one layout
+ * and there is nothing to vertically align. The strong signal is a bold, red
+ * weight plus a leading warning glyph in the text — the skin's red token with a
+ * literal fallback so a renamed token degrades gracefully. Replaces an earlier
+ * approach that reused the skin's themed .Message, whose injected .Message-icon
+ * never positioned correctly in the dashboard-widget context.
+ */
+.PdfWidget-statusDown {
+    color: oklch(var(--btu-theme-red-600, 55% 0.2 25));
+    font-weight: 600;
+}
+
+/*
+ * Health-widget title: the PDFreactor circle mark inline before the
+ * title-case heading text. The logo scales to the heading's font size
+ * (height: 1em) so it tracks the skin's DashboardWidget-title type.
+ */
+.PdfWidget-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.PdfWidget-titleLogo {
+    display: inline-flex;
+    height: 1em;
+}
+
+.PdfWidget-titleLogo svg {
+    display: block;
+    height: 100%;
+    width: auto;
+}

@@ -1,0 +1,45 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                excludeGroupByRegex 'com\\.brightspot($|\\..+)'
+                excludeGroupByRegex 'com\\.psddev($|\\..+)'
+            }
+        }
+
+        maven {
+            url 'https://artifactory.psdops.com/public'
+        }
+    }
+}
+
+plugins {
+    id 'com.brightspot.gradle' version '3.8.1'
+}
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        brightspotLibs {
+            library('brightspot', 'com.psddev:brightspot-bom:5.0.2.4')
+            library('brightspotDependencies', 'com.psddev:brightspot-dependencies:5.0.2.4')
+        }
+    }
+}
+
+brightspot {
+    projectGroup = 'com.realobjects.brightspot'
+
+    versions {
+        java = 11
+    }
+
+    classEnhancers = [
+        'com.psddev.dari.db.LazyLoadEnhancer',
+        'com.psddev.dari.db.QueryCommentEnhancer',
+        'com.psddev.dari.util.JavadocEnhancer',
+    ]
+}
+
+include(':plugin')
+include(':core')
+include(':web')

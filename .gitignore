@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Java
+*.class
+*.war
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+hs_err_pid*
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+
+# Node / Styleguide
+node_modules/
+_build/
+
+# OS
+.DS_Store
+
+# Local secrets / config (.env is tracked — contains only PROJECT_DIRECTORY)
+*.local
+settings.local.properties
+license*.txt
+licensekey*.xml
+
+# Local compose override (carries the license mount; see the .example file)
+docker-compose.override.yml
+
+# Customer-specific sample material — must never be committed
+Analyst Note/
