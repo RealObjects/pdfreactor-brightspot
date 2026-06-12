@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +19,7 @@ import com.microsoft.playwright.options.BoundingBox;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -56,6 +58,15 @@ class PdfToolUiTest {
     private static final Map<String, JsonNode> ARTICLES = new HashMap<>();
     private static JsonNode settings;
 
+    /**
+     * Whether the PDFreactor service behind the stack is licensed; detected
+     * once in {@link #bootstrapAndLogIn()}. Unlicensed, the service runs in
+     * evaluation mode: previews answer with the watermarked carrier page and
+     * the storing paths (Generate / publish) fail closed — several tests
+     * branch or skip on this.
+     */
+    private static boolean licensed;
+
     private Page page;
 
     @BeforeAll
@@ -79,6 +90,41 @@ class PdfToolUiTest {
         loginPage.keyboard().press("Enter");
         loginPage.waitForURL(url -> !url.contains("logIn"));
         loginPage.close();
+
+        licensed = detectLicenseState();
+    }
+
+    /**
+     * Reads the license state from the health widget's own status line. The
+     * fragment fetch also warms the background license probe, so by the time
+     * the first test runs the preview's evaluation-banner behavior is
+     * deterministic (a cold probe would let early previews answer with raw
+     * PDF even on an unlicensed service).
+     */
+    private static boolean detectLicenseState() {
+        String url = BASE + "/cms/dashboardWidget/default/"
+                + "com.realobjects.brightspot.pdfreactor.tool.PdfReactorHealthWidget/"
+                + UUID.randomUUID();
+        long deadline = System.currentTimeMillis() + 90_000L;
+        String body = "";
+        while (System.currentTimeMillis() < deadline) {
+            body = context.request().get(url).text();
+            if (body.contains("(licensed)")) {
+                return true;
+            }
+            if (body.contains("(evaluation")) {
+                return false;
+            }
+            try {
+                Thread.sleep(3_000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        throw new IllegalStateException(
+                "License state did not resolve from the health widget within 90s;"
+                        + " last fragment: " + body);
     }
 
     @AfterAll
@@ -118,7 +164,19 @@ class PdfToolUiTest {
     void pdfPreviewStreamsPdfIntoThePane() {
         Response preview = openEditPageAwaitingPreview(PAGED_WEB);
 
-        assertThat(preview.headerValue("content-type")).startsWith("application/pdf");
+        if (licensed) {
+            assertThat(preview.headerValue("content-type")).startsWith("application/pdf");
+        } else {
+            // Evaluation mode: the preview relaxes license problems and
+            // answers with the carrier page — an informational banner in the
+            // Tool DOM plus the watermarked PDF embedded in the iframe.
+            assertThat(preview.headerValue("content-type")).startsWith("text/html");
+            Locator banner = page.locator(".PreviewFrame-typeDisplay .PdfPreview-problems");
+            banner.waitFor();
+            assertThat(banner.textContent()).contains("Evaluation mode");
+            page.frameLocator(".PreviewFrame-typeDisplay iframe[data-container-id]")
+                    .locator("object[type='application/pdf']").waitFor();
+        }
     }
 
     @Test
@@ -135,8 +193,15 @@ class PdfToolUiTest {
 
         BoundingBox displayBox = display.boundingBox();
         BoundingBox iframeBox = iframe.boundingBox();
+        // A banner above the viewer (the evaluation notice here; diagnostics
+        // on problem documents) offsets the iframe by its height — the iframe
+        // fills what the banner leaves.
+        Locator banner = display.locator(".PdfPreview-problems");
+        double bannerHeight = banner.count() > 0 && banner.first().isVisible()
+                ? banner.first().boundingBox().height
+                : 0;
         assertThat(iframeBox.width).isGreaterThan(displayBox.width * 0.95);
-        assertThat(iframeBox.height).isGreaterThan(displayBox.height * 0.95);
+        assertThat(iframeBox.height).isGreaterThan((displayBox.height - bannerHeight) * 0.95);
     }
 
     @Test
@@ -434,7 +499,10 @@ class PdfToolUiTest {
                         && response.status() == 200,
                 () -> page.click(".PdfPreview-refresh"));
 
-        assertThat(reconverted.headerValue("content-type")).startsWith("application/pdf");
+        // Licensed: raw PDF. Evaluation mode: the carrier page wrapping the
+        // watermarked PDF (same shape as the initial preview).
+        assertThat(reconverted.headerValue("content-type"))
+                .startsWith(licensed ? "application/pdf" : "text/html");
     }
 
     @Test
@@ -504,6 +572,10 @@ class PdfToolUiTest {
     @Test
     @Order(6)
     void generateStoresAndServesCachedPdf() {
+        Assumptions.assumeTrue(licensed,
+                "needs a licensed service: Generate fails closed on license problems"
+                        + " before anything is stored (fail-closed behavior is covered"
+                        + " by DefaultPdfReactorServiceTest and the e2e suite)");
         openEditPageAwaitingPreview(PAGED_WEB);
         String href = generateHref();
 
@@ -612,22 +684,41 @@ class PdfToolUiTest {
 
         page.click("button[name=action-publish]");
 
-        // The publish hook converts off-thread; poll the widget until the
-        // stored PDF's identity appears or changes.
-        long deadline = System.currentTimeMillis() + 60_000L;
-        String after = before;
-        while (System.currentTimeMillis() < deadline) {
-            page.waitForTimeout(2_000);
-            page.navigate(editUrl(LONG_FORM));
-            after = storedPdfIdentityOrNull();
-            if (after != null && !after.equals(before)) {
-                break;
+        if (licensed) {
+            // The publish hook converts off-thread; poll the widget until the
+            // stored PDF's identity appears or changes.
+            long deadline = System.currentTimeMillis() + 60_000L;
+            String after = before;
+            while (System.currentTimeMillis() < deadline) {
+                page.waitForTimeout(2_000);
+                page.navigate(editUrl(LONG_FORM));
+                after = storedPdfIdentityOrNull();
+                if (after != null && !after.equals(before)) {
+                    break;
+                }
             }
-        }
 
-        assertThat(after).as("publish must produce/refresh the stored PDF")
-                .isNotNull()
-                .isNotEqualTo(before);
+            assertThat(after).as("publish must produce/refresh the stored PDF")
+                    .isNotNull()
+                    .isNotEqualTo(before);
+        } else {
+            // Evaluation mode: the publish-time conversion fails closed on
+            // the license, nothing may be stored, and the failure must
+            // surface on the widget as the red publish-failure banner.
+            long deadline = System.currentTimeMillis() + 90_000L;
+            Locator failureBanner = page.locator(".PdfWidget-publishFailure");
+            while (System.currentTimeMillis() < deadline && failureBanner.count() == 0) {
+                page.waitForTimeout(2_000);
+                page.navigate(editUrl(LONG_FORM));
+                failureBanner = page.locator(".PdfWidget-publishFailure");
+            }
+            assertThat(failureBanner.count())
+                    .as("an unlicensed publish must surface the failure banner")
+                    .isPositive();
+            assertThat(storedPdfIdentityOrNull())
+                    .as("an unlicensed publish must not store a PDF")
+                    .isEqualTo(before);
+        }
     }
 
     private String storedPdfIdentityOrNull() {
@@ -638,6 +729,10 @@ class PdfToolUiTest {
     @Test
     @Order(14)
     void convertAgainIsAFrameSafePostNotANavigableLink() {
+        Assumptions.assumeTrue(licensed,
+                "needs a licensed service: the Convert again control only renders"
+                        + " next to a stored PDF, which the licensed Generate path"
+                        + " (Order 6) produces");
         // PAGED_WEB has a stored PDF from Order 6, so the widget shows the
         // "Convert again" (regenerate) control.
         page = context.newPage();
@@ -699,7 +794,10 @@ class PdfToolUiTest {
                     response -> response.url().contains("/cms/pdfreactor/preview")
                             && response.status() == 200,
                     () -> shared.waitForLoadState());
-            assertThat(preview.headerValue("content-type")).startsWith("application/pdf");
+            // Licensed: raw PDF. Evaluation mode: the carrier page wrapping
+            // the watermarked PDF.
+            assertThat(preview.headerValue("content-type"))
+                    .startsWith(licensed ? "application/pdf" : "text/html");
 
             // Shared previews are frozen snapshots: edit-coupled controls
             // (the refresh button) must not render there (platform

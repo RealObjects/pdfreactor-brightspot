@@ -32,6 +32,12 @@ Three test suites, each with its own role:
 | End-to-end | `./gradlew :plugin:e2eTest` | Docker | the real PDFreactor service via Testcontainers: conversions, pagination, diagnostics, fail-closed aborts, PDF/A |
 | UI (Playwright) | `./gradlew :plugin:uiTest` | the running compose stack | the real editorial UI: preview, widget, publish round-trip, settings form, health widget |
 
+Both Docker-based suites adapt to an unlicensed (evaluation-mode)
+PDFreactor service: license-dependent assertions switch to the
+documented evaluation behavior (watermark carrier pages, fail-closed
+Generate/publish with the failure banner) or skip with a stated reason.
+A licensed service exercises the full set — CI runs in evaluation mode.
+
 `./gradlew build` (unit + checkstyle) must be green for every change.
 Run `e2eTest` when touching the service/conversion layer, and `uiTest`
 when touching anything the editor sees. After upgrading the Brightspot
