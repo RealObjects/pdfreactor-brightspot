@@ -81,10 +81,25 @@ conventions are described in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 [MIT](LICENSE) — Copyright (c) RealObjects GmbH.
 
-**Trademark notice:** PDFreactor and the PDFreactor logo
-(`plugin/src/main/resources/com/realobjects/brightspot/pdfreactor/web/pdfreactor-logo.svg`)
-are **not** covered by the MIT grant. PDFreactor® is a
-product of RealObjects GmbH.
+## Trademarks & third-party attributions
+
+This plugin integrates two third-party products that are **not** covered by
+the MIT grant above; they remain the property of their respective owners:
+
+- **PDFreactor®** is a product and registered trademark of **RealObjects
+  GmbH**. The PDFreactor logo
+  (`plugin/src/main/resources/com/realobjects/brightspot/pdfreactor/web/pdfreactor-logo.svg`)
+  is RealObjects' artwork — Copyright (c) RealObjects GmbH, all rights
+  reserved — and may not be used outside this plugin without RealObjects'
+  permission.
+- **Brightspot®** is a CMS and trademark of **Perfect Sense, Inc.**
+  (d.b.a. Brightspot). This is an independent, unaffiliated integration;
+  it is not produced, endorsed, or supported by Perfect Sense, Inc. The
+  Brightspot and Dari libraries it builds on (the `com.psddev` /
+  `com.brightspot` artifacts) are licensed by their owner under their own
+  terms.
+
+All other trademarks are the property of their respective owners.
 
 ## PDFreactor licenses & support
 
