@@ -56,9 +56,11 @@ import static com.psddev.dari.html.Nodes.text;
  * without converting again; {@code regenerate=true} forces a fresh
  * conversion.
  *
- * <p>Unlike the preview, this path stores an artifact, so it fails closed:
- * missing resources or license problems abort the generation and are shown
- * with full diagnostics instead.</p>
+ * <p>Unlike the preview, this path stores an artifact, so it fails closed on
+ * missing resources: a broken resource aborts the generation and is shown with
+ * full diagnostics instead. License problems do not block generation — an
+ * unlicensed (evaluation-mode) service stores watermarked output, with
+ * evaluation mode surfaced by the health widget and the preview banner.</p>
  */
 @WebPath("/pdfreactor/generate")
 public class PdfGeneratePage extends ToolPage {
@@ -238,10 +240,15 @@ public class PdfGeneratePage extends ToolPage {
         response.setStatus(200);
     }
 
-    /** Production (non-troubleshooting) generate options: fail closed on missing resources. */
+    /**
+     * Production (non-troubleshooting) generate options: fail closed on missing
+     * resources, but relax license problems so an unlicensed service stores
+     * watermarked output instead of blocking generation.
+     */
     private static PdfRenderOptions productionOptions() {
         return PdfRenderOptions.builder()
                 .failOnMissingResources(true)
+                .failOnLicenseProblems(false)
                 .build();
     }
 

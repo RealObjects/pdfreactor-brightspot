@@ -4,8 +4,11 @@ package com.realobjects.brightspot.pdfreactor;
  * Converts HTML to PDF through the PDFreactor Web Service.
  *
  * <p>The default implementation is {@link DefaultPdfReactorService}, which
- * talks to the service via the PDFreactor Java client. Conversions fail
- * closed on license problems by default; see {@link PdfRenderOptions} for
+ * talks to the service via the PDFreactor Java client. The plugin's own
+ * paths (preview, Generate, publish) do not block on license problems —
+ * an unlicensed service produces watermarked output rather than failing;
+ * the builder default in {@link PdfRenderOptions} still fails closed on
+ * license for other programmatic callers. See {@link PdfRenderOptions} for
  * the per-path error policy switches.</p>
  */
 public interface PdfReactorService {

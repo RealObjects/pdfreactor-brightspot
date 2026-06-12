@@ -34,8 +34,8 @@ Three test suites, each with its own role:
 
 Both Docker-based suites adapt to an unlicensed (evaluation-mode)
 PDFreactor service: license-dependent assertions switch to the
-documented evaluation behavior (watermark carrier pages, fail-closed
-Generate/publish with the failure banner) or skip with a stated reason.
+documented evaluation behavior (watermark carrier pages in the preview;
+Generate/publish still store output, just watermarked) where it differs.
 A licensed service exercises the full set — CI runs in evaluation mode.
 
 `./gradlew build` (unit + checkstyle) must be green for every change.

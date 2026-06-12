@@ -70,8 +70,11 @@ overridable, not even via configuration JSON):
   resources (`MISSING_RESOURCE` policy): a document with broken
   resources is never stored or published; the failure surface names the
   offending URL.
-- **License problems** (`LICENSE` policy) always abort: no path
-  silently produces output the license does not cover.
+- **License problems** never block: every path relaxes the `LICENSE`
+  policy, so an unlicensed (evaluation-mode) service produces watermarked
+  output everywhere — preview, Show PDF, Convert again, and publish.
+  Evaluation mode is surfaced by the health widget and the preview banner
+  rather than by a failure.
 
 Nuance worth knowing: with JavaScript processing on (the default),
 PDFreactor's engine treats a *network-unreachable* resource as a

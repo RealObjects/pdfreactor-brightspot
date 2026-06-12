@@ -48,10 +48,13 @@ import org.slf4j.LoggerFactory;
  * same output-affecting options = no second attempt; a re-publish changes
  * the update date and therefore retries.</p>
  *
- * <p>The publish path fails closed ({@code LICENSE} +
- * {@code MISSING_RESOURCE} error policies): a broken PDF is never archived.
- * Failures are recorded in {@code generatedPdfStatus}, logged, and published
- * as a Brightspot notification topic.)</p>
+ * <p>The publish path fails closed on missing resources
+ * ({@code MISSING_RESOURCE} error policy): a PDF with broken resources is never
+ * archived. License problems do <em>not</em> block publishing — an unlicensed
+ * (evaluation-mode) service archives watermarked output rather than failing
+ * the publish; the health widget and preview banner warn about evaluation
+ * mode. Failures are recorded in {@code generatedPdfStatus}, logged, and
+ * published as a Brightspot notification topic.</p>
  */
 public final class PdfPublishAutomation {
 
@@ -167,10 +170,16 @@ public final class PdfPublishAutomation {
         return PdfReactorPublishSettings.isEnabled(owner);
     }
 
-    /** Publish conversions fail closed; a broken PDF is never archived. */
+    /**
+     * Publish conversions fail closed on missing resources so a PDF with broken
+     * resources is never archived; license problems are relaxed so an
+     * unlicensed service archives watermarked output rather than blocking the
+     * publish.
+     */
     static PdfRenderOptions publishOptions() {
         return PdfRenderOptions.builder()
                 .failOnMissingResources(true)
+                .failOnLicenseProblems(false)
                 .build();
     }
 
