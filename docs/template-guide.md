@@ -36,6 +36,22 @@ itself, resolving relative URLs against a **base URL**:
 - Absolute URLs must be reachable **from the PDFreactor service** —
   remember it may run in a container/host that cannot see
   `localhost` or internal-only hostnames.
+- When the page's absolute URLs use a host the PDFreactor service
+  cannot resolve — the classic case: a containerized service and a CMS
+  whose uploaded images carry `http://localhost/storage/…` URLs, which
+  fail with *connection refused* — use PDFreactor's
+  [URL rewrites](https://www.pdfreactor.com/product/doc_html/manual-lib.html#urlRewrites)
+  to map them to a service-reachable host before fetching. The rules
+  go through the plugin's `configurationJson` at any level, e.g. the
+  deploy-time key:
+
+  ```properties
+  pdfreactor/configurationJson={"urlRewriteSettings":{"rules":[{"pattern":"^https?://localhost(/.*)$","substitution":"http://apache$1"}]}}
+  ```
+
+  (This repository's dev harness ships exactly this rule — see
+  `docker-context.properties`.) Diagnostics keep reporting the original
+  URL, so the editor-facing messages stay meaningful.
 - ICC profiles and the generated `@page` geometry are embedded in the
   conversion request itself and need no fetching.
 

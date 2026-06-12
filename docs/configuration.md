@@ -65,6 +65,13 @@ object as JSON and can set any property of the
 [PDFreactor Configuration API](https://www.pdfreactor.com/product/webservice/doc/java.html)
 that no form field owns.
 
+A canonical use: PDFreactor's
+[URL rewrites](https://www.pdfreactor.com/product/doc_html/manual-lib.html#urlRewrites)
+(`urlRewriteSettings`), which map resource URLs the service cannot
+resolve (e.g. a CMS public host of `localhost` seen from a PDFreactor
+container) to service-reachable ones before fetching — the dev harness
+in this repository ships such a rule in `docker-context.properties`.
+
 It cannot win against the forms: after the JSON layers are deep-merged
 onto the assembled configuration, the plugin re-applies every
 plugin/UI-owned value on top — the document, the content observer, the

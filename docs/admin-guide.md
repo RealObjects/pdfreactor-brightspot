@@ -173,6 +173,7 @@ Keyed by **where the failure shows up**:
 | Health widget | ⚠ DOWN — connection error | Service down/unreachable, wrong service URL | Check the service and the deploy-time URL | Ops / developer |
 | Health widget | UP … (evaluation) | No license installed | Install/supply license (see Licensing) | Ops |
 | Preview pane | Warning banner over a rendered PDF | Missing resource (broken image/stylesheet URL) in the content | Fix the referenced asset; the banner names the URL | Editor / template developer |
+| Preview / generate diagnostics | "Connection refused" on URLs that work in your browser | The PDFreactor service cannot resolve the CMS's public host (typical with a containerized service and `localhost` URLs) | Map the URLs to a service-reachable host via PDFreactor URL rewrites in the configuration JSON (see the [template guide](template-guide.md#urls-inside-the-page)) | Developer / ops |
 | Preview pane | Evaluation banner | Evaluation mode | See Licensing | Ops |
 | Generate failure page (after Show PDF / Convert again) | Error + remedy + "Technical details" / "Conversion log" | Broken resource (fails closed), invalid configuration, conformance violation, service error | Follow the remedy line; the log names the offender | Editor / admin / developer per the message |
 | Edit form: Generated PDF Status | "Failed: …" after a publish | Publish-time generation failed (same causes as above) | Open the document's PDF widget for the full reason; fix and republish or use Convert again | Editor / admin |
