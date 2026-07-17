@@ -9,12 +9,29 @@ exhaustive setting tables this guide links into.
 
 ## Dependency setup
 
-Released versions are published to the **GitHub Packages** Maven registry
-as `com.realobjects.brightspot:pdfreactor-brightspot`, and every
+There are three ways to get the plugin onto your project's classpath.
+**Retrieving the pre-built artifact from GitHub Packages is one option,
+alternative to building it yourself or hosting it in your own Maven
+repository** — pick whichever fits your infrastructure:
+
+1. **Retrieve it from GitHub Packages** — the released artifact
+   `com.realobjects.brightspot:pdfreactor-brightspot` is published to the
+   GitHub Packages Maven registry; depend on it directly, no build step
+   ([Path A](#path-a--github-packages)). The trade-off: GitHub Packages
+   requires an access token even for public packages.
+2. **Build it from source** — clone and build, then consume the local
+   build via your Maven cache, a Gradle composite build, or a vendored JAR
+   ([Paths C–E](#building-from-source)).
+3. **Host it in your own Maven repository** — deploy the artifact (pulled
+   from GitHub Packages or built from source) into your organization's
+   Nexus / Artifactory and consume it as an ordinary internal dependency
+   ([below](#hosting-it-in-your-own-maven-repository)). This removes the
+   per-developer GitHub Packages token.
+
+Independently of these, every
 [GitHub Release](https://github.com/RealObjects/pdfreactor-brightspot/releases)
-also carries the built JARs (main, `-sources`, `-javadoc`) as downloadable
-assets. You can consume the published artifact, download a JAR directly,
-or build from source — four paths in all, below.
+also attaches the built JARs (main, `-sources`, `-javadoc`) as token-free
+downloads ([Path B](#path-b--download-a-release-jar)).
 
 Whichever you pick, the plugin's own dependencies resolve from
 `mavenCentral()` (the PDFreactor Java client,
@@ -23,7 +40,7 @@ Brightspot Artifactory (`https://artifactory.psdops.com/public`) your
 project already uses, so your consuming project needs `mavenCentral()` in
 its repositories.
 
-### Path A — GitHub Packages (recommended)
+### Path A — GitHub Packages
 
 Add the registry as a repository. GitHub Packages requires authentication
 **even for public packages**, so supply a GitHub username and a token with
@@ -143,6 +160,34 @@ not — declare it explicitly:
 
 ```gradle
     api 'com.pdfreactor.webservice:pdfreactor-java-client:12.6.0'
+```
+
+### Hosting it in your own Maven repository
+
+If your organization runs its own Maven repository (Nexus, Artifactory,
+S3-backed, …), you can re-host the plugin there and let your team and CI
+consume it anonymously — no GitHub Packages token per developer. Obtain the
+artifact once (pull it from GitHub Packages, or build it from source), then
+deploy the JAR and its POM to your repository under the same coordinates
+using your normal upload process (your repository's UI, `mvn
+deploy:deploy-file`, or a Gradle `maven-publish` repository pointed at it).
+
+The published POM is **self-contained** — it carries the concrete resolved
+version of every dependency (see the note under
+[Path C](#path-c--publishtomavenlocal--mavenlocal)) — so consumers resolve
+it without importing any BOM. Consume it like any internal dependency:
+
+```gradle
+// build.gradle
+repositories {
+    maven { url = uri('https://nexus.example.com/repository/maven-releases') }
+    mavenCentral()
+    // ... your existing Brightspot repositories
+}
+
+dependencies {
+    api 'com.realobjects.brightspot:pdfreactor-brightspot:0.1.0-beta.1'
+}
 ```
 
 ### Version compatibility

@@ -33,19 +33,17 @@ Licenses and trials are available from
 
 ## 2. Add the plugin to your project
 
-Released versions are published to the **GitHub Packages** Maven registry;
-each release also attaches the built JARs to the
-[Releases page](https://github.com/RealObjects/pdfreactor-brightspot/releases).
-Every path below additionally needs `mavenCentral()` among your
-repositories (the PDFreactor Java client resolves from there). Pick
-whichever fits your infrastructure; the
-[integration guide](integration-guide.md#dependency-setup) covers all of
-them in full.
+You can get the plugin three ways — **retrieve the pre-built artifact from
+GitHub Packages, build it from source, or host it in your own Maven
+repository**. The first is shown here; the
+[integration guide](integration-guide.md#dependency-setup) covers building
+from source and self-hosting in full. Every path additionally needs
+`mavenCentral()` among your repositories (the PDFreactor Java client
+resolves from there).
 
-**Path A — GitHub Packages (recommended).** Add the registry and depend on
-the published artifact. GitHub Packages needs authentication even for
-public packages, so provide a GitHub username and a token with
-`read:packages`:
+**Path A — GitHub Packages.** Add the registry and depend on the published
+artifact. GitHub Packages needs authentication even for public packages, so
+provide a GitHub username and a token with `read:packages`:
 
 ```gradle
 // build.gradle
