@@ -1,0 +1,58 @@
+name: Release
+
+# Publishes the plugin when a GitHub Release is published:
+#   - to the GitHub Packages Maven registry
+#     (com.realobjects.brightspot:pdfreactor-brightspot), and
+#   - as downloadable JARs (main + sources + javadoc) attached to the Release,
+#     for consumers who cannot authenticate to GitHub Packages.
+#
+# The release version must match plugin/build.gradle's `version`. Create the
+# release from a tag on main after bumping that version.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write   # upload release assets
+  packages: write   # publish to GitHub Packages
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Fail early if the release tag and the built version disagree, so we
+      # never publish 0.1.0-beta.1 under a v0.2.0 tag or vice versa.
+      - name: Verify version matches the release tag
+        run: |
+          BUILD_VERSION=$(./gradlew -q :plugin:properties | awk -F': ' '/^version:/ {print $2}')
+          TAG='${{ github.event.release.tag_name }}'
+          echo "Build version: $BUILD_VERSION   Release tag: $TAG"
+          if [ "v$BUILD_VERSION" != "$TAG" ] && [ "$BUILD_VERSION" != "$TAG" ]; then
+            echo "::error::plugin/build.gradle version ($BUILD_VERSION) does not match release tag ($TAG)"
+            exit 1
+          fi
+
+      - name: Build plugin
+        run: ./gradlew :plugin:build
+
+      - name: Publish to GitHub Packages
+        run: ./gradlew :plugin:publishMavenPublicationToGitHubPackagesRepository
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach JARs to the release
+        run: gh release upload "${{ github.event.release.tag_name }}" plugin/build/libs/pdfreactor-brightspot-*.jar --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,6 +5,19 @@ plugins {
 
 description = 'PDFreactor integration plugin for Brightspot CMS'
 
+// Explicit release version. Without this the com.brightspot.gradle convention
+// defaults to 1.0.0-SNAPSHOT, which cannot be tagged as a release. Bump this
+// for each tagged release; the release workflow publishes it to GitHub Packages
+// and attaches the built JARs to the GitHub Release.
+version = '0.1.0-beta.1'
+
+// Name the built archives after the published artifactId rather than the Gradle
+// module name (:plugin). Keeps the JAR filenames, the Maven coordinate, and the
+// GitHub Release assets consistent (pdfreactor-brightspot-<version>.jar).
+base {
+    archivesName = 'pdfreactor-brightspot'
+}
+
 // Lets consumers install the plugin into their local Maven repository
 // (`./gradlew :plugin:publishToMavenLocal`) and depend on
 // com.realobjects.brightspot:pdfreactor-brightspot from mavenLocal().
@@ -18,6 +31,14 @@ description = 'PDFreactor integration plugin for Brightspot CMS'
 // instead carries the concrete resolved version of every dependency
 // (version mapping) — self-contained coordinates that work without the
 // consumer importing any BOM.
+// Attach sources and Javadoc JARs to the publication so consumers get
+// downloadable -sources / -javadoc artifacts alongside the main JAR (in
+// GitHub Packages and, via the release workflow, as GitHub Release assets).
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 publishing {
     publications {
         maven(MavenPublication) {
@@ -26,6 +47,21 @@ publishing {
             versionMapping {
                 usage('java-api') { fromResolutionResult() }
                 usage('java-runtime') { fromResolutionResult() }
+            }
+        }
+    }
+
+    // GitHub Packages Maven registry. Credentials come from the environment:
+    // in CI the release workflow supplies GITHUB_ACTOR / GITHUB_TOKEN; locally,
+    // export a Personal Access Token with write:packages. publishToMavenLocal
+    // still works without either (it ignores this repository).
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/RealObjects/pdfreactor-brightspot')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
             }
         }
     }
