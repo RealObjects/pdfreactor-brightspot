@@ -68,7 +68,11 @@ Shared by all three: the [configuration reference](docs/configuration.md)
 
 - `plugin/` — the distributable plugin
   (`com.realobjects.brightspot:pdfreactor-brightspot`). This is what you
-  consume.
+  consume — published to
+  [GitHub Packages](https://github.com/RealObjects/pdfreactor-brightspot/packages),
+  with each [release](https://github.com/RealObjects/pdfreactor-brightspot/releases)
+  also attaching the built JARs for direct download. See the
+  [quick start](docs/quick-start.md#2-add-the-plugin-to-your-project).
 - `core/` + `web/` — a development harness and runnable example: a
   minimal Brightspot app with a sample article type wired to the plugin,
   used by the UI test suite and the quick start's "see it without your

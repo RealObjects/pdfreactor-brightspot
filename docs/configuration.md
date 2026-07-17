@@ -10,7 +10,7 @@ behavior. Task-oriented walkthroughs live in the
 [template guide](template-guide.md); this document is the table to come
 back to.
 
-Verified against plugin version 1.0.0-SNAPSHOT, PDFreactor 12.6
+Verified against plugin version 0.1.0-beta.1, PDFreactor 12.6
 (Web Service), and `brightspot-bom` 5.0.2.4.
 
 ---

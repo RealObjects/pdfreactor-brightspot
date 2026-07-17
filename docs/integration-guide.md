@@ -9,26 +9,75 @@ exhaustive setting tables this guide links into.
 
 ## Dependency setup
 
-The plugin is distributed as source: clone
-`https://github.com/RealObjects/pdfreactor-brightspot.git` and build
-with the committed wrapper (`./gradlew :plugin:build`). Building needs
-JDK 21 (the build targets Java 11 bytecode); see
+Released versions are published to the **GitHub Packages** Maven registry
+as `com.realobjects.brightspot:pdfreactor-brightspot`, and every
+[GitHub Release](https://github.com/RealObjects/pdfreactor-brightspot/releases)
+also carries the built JARs (main, `-sources`, `-javadoc`) as downloadable
+assets. You can consume the published artifact, download a JAR directly,
+or build from source — four paths in all, below.
+
+Whichever you pick, the plugin's own dependencies resolve from
+`mavenCentral()` (the PDFreactor Java client,
+`com.pdfreactor.webservice:pdfreactor-java-client:12.6.0`) and the public
+Brightspot Artifactory (`https://artifactory.psdops.com/public`) your
+project already uses, so your consuming project needs `mavenCentral()` in
+its repositories.
+
+### Path A — GitHub Packages (recommended)
+
+Add the registry as a repository. GitHub Packages requires authentication
+**even for public packages**, so supply a GitHub username and a token with
+the `read:packages` scope (a classic Personal Access Token) — this is the
+one practical difference from an anonymous registry like Maven Central:
+
+```gradle
+// build.gradle
+repositories {
+    maven {
+        name = 'GitHubPackages'
+        url = uri('https://maven.pkg.github.com/RealObjects/pdfreactor-brightspot')
+        credentials {
+            username = System.getenv('GITHUB_ACTOR')   // your GitHub username
+            password = System.getenv('GITHUB_TOKEN')   // token with read:packages
+        }
+    }
+    mavenCentral()
+    // ... your existing Brightspot repositories
+}
+
+dependencies {
+    api 'com.realobjects.brightspot:pdfreactor-brightspot:0.1.0-beta.1'
+}
+```
+
+Keep the token out of source control: provide `GITHUB_ACTOR` /
+`GITHUB_TOKEN` in the environment, or put equivalent properties in
+`~/.gradle/gradle.properties` and read them here.
+
+### Path B — download a release JAR
+
+If you cannot authenticate to GitHub Packages, download
+`pdfreactor-brightspot-<version>.jar` (and, if you want them, the
+`-sources` / `-javadoc` JARs) from the
+[Releases page](https://github.com/RealObjects/pdfreactor-brightspot/releases)
+and consume it as a [vendored JAR](#path-e--vendored-jar). Release assets
+need no token.
+
+### Building from source
+
+The remaining paths compile the plugin from a checkout. Clone
+`https://github.com/RealObjects/pdfreactor-brightspot.git` and build with
+the committed wrapper (`./gradlew :plugin:build`); building needs JDK 21
+(the build targets Java 11 bytecode); see
 [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-The plugin's own dependencies resolve from two anonymous repositories:
-`mavenCentral()` (the PDFreactor Java client,
-`com.pdfreactor.webservice:pdfreactor-java-client:12.6.0`) and the
-public Brightspot Artifactory (`https://artifactory.psdops.com/public`)
-your project already uses. Your consuming project needs `mavenCentral()`
-in its repositories; nothing else is special.
-
-### Path A — `publishToMavenLocal` + `mavenLocal()`
+### Path C — `publishToMavenLocal` + `mavenLocal()`
 
 ```sh
 ./gradlew :plugin:publishToMavenLocal
 ```
 
-publishes `com.realobjects.brightspot:pdfreactor-brightspot:1.0.0-SNAPSHOT`
+publishes `com.realobjects.brightspot:pdfreactor-brightspot:0.1.0-beta.1`
 into `~/.m2/repository`. The POM is self-contained: it carries the
 concrete resolved version of every dependency, so no BOM import is
 needed on your side. Consume it:
@@ -42,11 +91,11 @@ repositories {
 }
 
 dependencies {
-    api 'com.realobjects.brightspot:pdfreactor-brightspot:1.0.0-SNAPSHOT'
+    api 'com.realobjects.brightspot:pdfreactor-brightspot:0.1.0-beta.1'
 }
 ```
 
-### Path B — Gradle composite build
+### Path D — Gradle composite build
 
 Reference the checkout from your `settings.gradle` so you always
 compile against the sources you cloned. The substitution must be
@@ -74,15 +123,17 @@ The plugin's Brightspot dependencies are declared without versions
 (your project's Brightspot BOM supplies them, as it does for the
 project's own Brightspot dependencies).
 
-### Path C — vendored JAR
+### Path E — vendored JAR
 
-Build once, copy `plugin/build/libs/plugin-1.0.0-SNAPSHOT.jar` into
-your project, and depend on the file:
+Build once (or download the release asset — see
+[Path B](#path-b--download-a-release-jar)), copy
+`pdfreactor-brightspot-0.1.0-beta.1.jar` into your project, and depend on
+the file:
 
 ```gradle
 // build.gradle
 dependencies {
-    api files('libs/plugin-1.0.0-SNAPSHOT.jar')
+    api files('libs/pdfreactor-brightspot-0.1.0-beta.1.jar')
 }
 ```
 

@@ -31,10 +31,43 @@ run licensed, in plugin terms:
 Licenses and trials are available from
 [RealObjects](https://www.pdfreactor.com/buy/).
 
-## 2. Build the plugin and add it to your project
+## 2. Add the plugin to your project
 
-The plugin is distributed as source — clone and build (the Gradle
-wrapper is committed; no local Gradle needed):
+Released versions are published to the **GitHub Packages** Maven registry;
+each release also attaches the built JARs to the
+[Releases page](https://github.com/RealObjects/pdfreactor-brightspot/releases).
+Every path below additionally needs `mavenCentral()` among your
+repositories (the PDFreactor Java client resolves from there). Pick
+whichever fits your infrastructure; the
+[integration guide](integration-guide.md#dependency-setup) covers all of
+them in full.
+
+**Path A — GitHub Packages (recommended).** Add the registry and depend on
+the published artifact. GitHub Packages needs authentication even for
+public packages, so provide a GitHub username and a token with
+`read:packages`:
+
+```gradle
+// build.gradle
+repositories {
+    maven {
+        url = uri('https://maven.pkg.github.com/RealObjects/pdfreactor-brightspot')
+        credentials {
+            username = System.getenv('GITHUB_ACTOR')   // your GitHub username
+            password = System.getenv('GITHUB_TOKEN')   // token with read:packages
+        }
+    }
+    mavenCentral()
+    // ... your existing Brightspot repositories
+}
+
+dependencies {
+    api 'com.realobjects.brightspot:pdfreactor-brightspot:0.1.0-beta.1'
+}
+```
+
+The remaining paths build from a checkout (the Gradle wrapper is
+committed; no local Gradle needed):
 
 ```sh
 git clone https://github.com/RealObjects/pdfreactor-brightspot.git
@@ -42,33 +75,12 @@ cd pdfreactor-brightspot
 ./gradlew :plugin:build
 ```
 
-Then wire it into your Brightspot project. Three equivalent paths —
-pick whichever fits your infrastructure. All of them additionally need
-`mavenCentral()` among your repositories (the PDFreactor Java client
-resolves from Maven Central).
+**Path B — local Maven repository.** Install the plugin locally with
+`./gradlew :plugin:publishToMavenLocal`, add `mavenLocal()` to your
+repositories, and depend on
+`com.realobjects.brightspot:pdfreactor-brightspot:0.1.0-beta.1`.
 
-**Path A — local Maven repository.** Install the plugin locally:
-
-```sh
-./gradlew :plugin:publishToMavenLocal
-```
-
-and consume it:
-
-```gradle
-// build.gradle
-repositories {
-    mavenLocal()
-    mavenCentral()
-    // ... your existing Brightspot repositories
-}
-
-dependencies {
-    api 'com.realobjects.brightspot:pdfreactor-brightspot:1.0.0-SNAPSHOT'
-}
-```
-
-**Path B — Gradle composite build.** No artifact step; point your
+**Path C — Gradle composite build.** No artifact step; point your
 `settings.gradle` at the clone, substituting the published coordinates
 with the clone's `:plugin` project:
 
@@ -88,18 +100,19 @@ dependencies {
 }
 ```
 
-**Path C — vendored JAR.** Copy
-`plugin/build/libs/plugin-1.0.0-SNAPSHOT.jar` into your project (e.g.
-`libs/`) and depend on it directly:
+**Path D — vendored JAR.** Copy
+`plugin/build/libs/pdfreactor-brightspot-0.1.0-beta.1.jar` (built above, or
+downloaded from the Releases page) into your project (e.g. `libs/`) and
+depend on it directly:
 
 ```gradle
 // build.gradle
 dependencies {
-    api files('libs/plugin-1.0.0-SNAPSHOT.jar')
+    api files('libs/pdfreactor-brightspot-0.1.0-beta.1.jar')
 }
 ```
 
-Caveat for path C: a file dependency carries no metadata, so the
+Caveat for path D: a file dependency carries no metadata, so the
 plugin's own dependencies (notably
 `com.pdfreactor.webservice:pdfreactor-java-client:12.6.0`) must already
 be on your classpath — declare that one yourself; the Brightspot
