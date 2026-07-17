@@ -15,7 +15,7 @@ over HTTP. If you don't already have one, the official Docker image gets
 you a service in one line:
 
 ```sh
-docker run -d -p 9423:9423 realobjects/pdfreactor:12.6.0
+docker run -d -p 9423:9423 realobjects/pdfreactor:12.7.0
 ```
 
 The service answers at `http://localhost:9423/service/rest` (check

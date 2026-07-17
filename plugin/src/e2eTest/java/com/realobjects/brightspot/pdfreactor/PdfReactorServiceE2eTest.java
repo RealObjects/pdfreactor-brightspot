@@ -45,7 +45,7 @@ class PdfReactorServiceE2eTest {
     }
 
     private static GenericContainer<?> createContainer() {
-        GenericContainer<?> container = new GenericContainer<>("realobjects/pdfreactor:12.6.0")
+        GenericContainer<?> container = new GenericContainer<>("realobjects/pdfreactor:12.7.0")
                 .withExposedPorts(SERVICE_PORT)
                 .withEnv("JAVA_OPTIONS", "-Xmx1g")
                 .waitingFor(Wait.forHttp("/service/rest/status").forPort(SERVICE_PORT));

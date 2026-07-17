@@ -63,7 +63,7 @@ services:
   # merges it automatically) and put your license key next to it; see the
   # example file for details.
   pdfreactor:
-    image: realobjects/pdfreactor:12.6.0
+    image: realobjects/pdfreactor:12.7.0
     # Loopback-only: this is an unauthenticated conversion service that fetches
     # arbitrary URLs (an SSRF surface) — do not expose it on the LAN.
     ports:

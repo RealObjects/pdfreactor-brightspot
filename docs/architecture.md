@@ -251,7 +251,7 @@ Three layers, all in this repository:
    server.
 2. **End-to-end tests** (`plugin/src/e2eTest`,
    `./gradlew :plugin:e2eTest`; needs Docker): Testcontainers runs the
-   real `realobjects/pdfreactor:12.6.0` image and exercises the service
+   real `realobjects/pdfreactor:12.7.0` image and exercises the service
    for real — health/version, sync + async conversion, pagination,
    stylesheet injection, diagnostics, fail-closed aborts, PDF/A output.
    Without a license file the suite runs in evaluation mode and
